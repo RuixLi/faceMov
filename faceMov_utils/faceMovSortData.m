@@ -12,29 +12,17 @@ np = cumsum([0 npix]);
 for k = 1:ops.nViews
     nx = ops.nX(k);
     ny = ops.nY(k);
-
     % get average frame and average motion for each viedo
-    if ~isfield(ops,'frameAvg')
-        ops.frameAvg{k} = reshape(ops.avgframe(tp(k)+1:tp(k+1)), ny, nx);
-        ops.motionAvg{k} = reshape(ops.avgmotion(tp(k)+1:tp(k+1)), ny, nx);
+    ops.frameAvg{k} = reshape(ops.avgframe(tp(k)+1:tp(k+1)), ny, nx);
+    ops.motionAvg{k} = reshape(ops.avgmotion(tp(k)+1:tp(k+1)), ny, nx);
+    for n = 1:ops.ncomps
+        maskim = zeros(ny,nx);
+        maskim(ops.wpix{k}) = ops.uMotMask(np(k)+1:np(k+1),n);
+        ops.motionMasks{k}(:,:,n) = maskim;
     end
-    % get svd masks for each viedo
-    if isfield(ops,'uMotMask') && ~isempty(ops.uMotMask)
-        for n = 1:ops.ncomps
-            maskim = zeros(ny,nx);
-            maskim(ops.wpix{k}) = ops.uMotMask(np(k)+1:np(k+1),n);
-            ops.motionMasks{k}(:,:,n) = maskim;
-        end
-    end
-
 end
 
-if isfield(ops,'uMotMask') && ~isempty(ops.uMotMask)
-    ops.motionTS = sum(abs(ops.motSVD),2);
-else
-    ops.motSVD = [];   
-    ops.motionTS = [];
-end
+ops.motionTS = sum(ops.motSVD,2);
 
 % keep a down sampled movie
 if ops.keepMovie
